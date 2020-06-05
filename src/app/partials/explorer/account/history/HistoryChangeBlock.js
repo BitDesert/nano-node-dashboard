@@ -9,7 +9,6 @@ import { TranslatedMessage } from "lib/TranslatedMessage";
 export default function HistoryChangeBlock({ block }) {
   return (
     <HistoryEntry
-      transactionAccount={block.account}
       type={
         <span className="text-info text-capitalize">
           <TranslatedMessage id="block.subtype.change" />

@@ -10,7 +10,6 @@ import { withNetworkData } from "lib/NetworkContext";
 import Currency from "lib/Currency";
 
 import NanoNodeNinja from "lib/NanoNodeNinja";
-import Natricon from "app/partials/Natricon";
 
 import AccountLink from "app/partials/AccountLink";
 import AccountQR from "app/partials/AccountQR";
@@ -77,15 +76,15 @@ class Account extends React.Component {
         <TranslatedMessage id="account.rep.online" />
       </span>
     ) : (
-        <span
-          className="badge badge-danger mr-1 tooltipped tooltipped-e tooltipped-multiline"
-          aria-label={formatMessage(
-            withDefault({ id: "account.rep_offline.desc" })
-          )}
-        >
-          <TranslatedMessage id="account.rep.offline" />
-        </span>
-      );
+      <span
+        className="badge badge-danger mr-1 tooltipped tooltipped-e tooltipped-multiline"
+        aria-label={formatMessage(
+          withDefault({ id: "account.rep_offline.desc" })
+        )}
+      >
+        <TranslatedMessage id="account.rep.offline" />
+      </span>
+    );
   }
 
   accountVersionBadge() {
@@ -149,54 +148,33 @@ class Account extends React.Component {
           key={window.location.href}
           title={`${this.accountTitle()} - ${account}`}
         />
-        <div className="row align-items-center">
-          <div className="col">
-            <div className="row flex-nowrap align-items-center">
-              <div className="col-auto d-none d-md-block px-0 text-center">
-                <Natricon
-                  account={account}
-                  style={{ width: "100px", height: "100px" }}
-                />
-              </div>
 
-              <div className="col mb-2 pl-md-0">
-                <h1 className="mb-0">{this.accountTitle()}</h1>
+        <div className="row align-items-center" style={{ overflow: "auto" }}>
+          <div className="col-lg mb-2">
+            <h1 className="mb-0">{this.accountTitle()}</h1>
+            <p className="text-muted mb-0 break-word">
+              <span className="text-monospace">{account}</span>
 
-                <div className="row flex-nowrap align-items-center mw-100">
-                  <div className="col-auto d-block d-md-none pr-0">
-                    <Natricon
-                      account={account}
-                      style={{ width: "75px", height: "75px" }}
-                    />
-                  </div>
-                  <div className="col pl-0 pl-md-3" style={{ width: "80%" }}>
-                    <p className="text-muted mb-0 break-word">
-                      <span className="text-monospace">{account}</span>
+              <span
+                className="tooltipped tooltipped-e ml-1"
+                aria-label="Copy to clipboard"
+              >
+                <Clipboard
+                  component="span"
+                  style={{ cursor: "pointer" }}
+                  data-clipboard-text={account}
+                >
+                  <i className="fa fa-clipboard" />
+                </Clipboard>
+              </span>
+            </p>
 
-                      <span
-                        className="tooltipped tooltipped-e ml-1"
-                        aria-label="Copy to clipboard"
-                      >
-                        <Clipboard
-                          component="span"
-                          style={{ cursor: "pointer" }}
-                          data-clipboard-text={account}
-                        >
-                          <i className="fa fa-clipboard" />
-                        </Clipboard>
-                      </span>
-                    </p>
-                  </div>
-                </div>
+            {this.getRepresentative()}
 
-                {this.getRepresentative()}
-
-                <p className="mb-0">
-                  {this.representativeOnlineStatus()}
-                  {this.accountVersionBadge()}
-                </p>
-              </div>
-            </div>
+            <p className="mb-0">
+              {this.representativeOnlineStatus()}
+              {this.accountVersionBadge()}
+            </p>
           </div>
           <div className="col-auto">
             <div className="row">
@@ -313,15 +291,15 @@ class Account extends React.Component {
         return this.props.loading ? (
           <Loading />
         ) : (
-            <AccountHistory
-              unopened={unopened}
-              history={history}
-              pendingTransactions={pendingTransactions}
-              blockCount={blockCount}
-              loadMore={loadMore}
-              hasMore={hasMore}
-            />
-          );
+          <AccountHistory
+            unopened={unopened}
+            history={history}
+            pendingTransactions={pendingTransactions}
+            blockCount={blockCount}
+            loadMore={loadMore}
+            hasMore={hasMore}
+          />
+        );
       case "delegators":
         return <AccountDelegators account={account} weight={weight} />;
     }

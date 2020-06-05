@@ -13,7 +13,6 @@ import config from "client-config.json";
 export default function HistorySendBlock({ block }) {
   return (
     <HistoryEntry
-      transactionAccount={block.account}
       type={
         <span className="text-danger text-capitalize">
           <TranslatedMessage id="block.subtype.send" />
