@@ -1,5 +1,6 @@
-import React from "react";
-import ReactCSSTransitionGroup from "react-addons-css-transition-group";
+import React, { Fragment } from "react";
+import { CSSTransitionGroup } from "react-transition-group";
+import { TranslatedMessage } from "lib/TranslatedMessage";
 
 import HistorySendBlock from "./history/HistorySendBlock";
 import HistoryReceiveBlock from "./history/HistoryReceiveBlock";
@@ -27,27 +28,40 @@ export default function TransactionHistory({ history }) {
   });
 
   return (
-    <div className="table-responsive">
-      <table className="table">
-        <thead>
-          <tr>
-            <th>Type</th>
-            <th>Account</th>
-            <th>Amount</th>
-            <th>Date</th>
-            <th>Block</th>
-          </tr>
-        </thead>
+    <Fragment>
+      <div className="row d-none d-lg-flex">
+        <div className="col-1">
+          <h6 className="text-capitalize mb-0">
+            <TranslatedMessage id="type" />
+          </h6>
+        </div>
+        <div className="col-7">
+          <h6 className="text-capitalize mb-0">
+            <TranslatedMessage id="account" /> /{" "}
+            <TranslatedMessage id="block" />
+          </h6>
+        </div>
+        <div className="col">
+          <h6 className="text-capitalize mb-0">
+            <TranslatedMessage id="amount" />
+          </h6>
+        </div>
+        <div className="col text-right">
+          <h6 className="text-capitalize mb-0">
+            <TranslatedMessage id="date" />
+          </h6>
+        </div>
+      </div>
 
-        <ReactCSSTransitionGroup
-          component="tbody"
-          transitionName="Transaction"
-          transitionEnterTimeout={500}
-          transitionLeaveTimeout={500}
-        >
-          {blocks}
-        </ReactCSSTransitionGroup>
-      </table>
-    </div>
+      <hr />
+
+      <CSSTransitionGroup
+        transitionName="Transaction"
+        transitionEnterTimeout={500}
+        transitionLeaveTimeout={500}
+      >
+        {blocks}
+      </CSSTransitionGroup>
+    </Fragment>
   );
 }

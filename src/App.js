@@ -1,29 +1,19 @@
-import React, { Component } from "react";
+import React from "react";
+import { IntlProvider } from "react-intl";
 import "./App.css";
 import "bootstrap/dist/css/bootstrap.css";
 import "primer-tooltips/build/build.css";
 
-import injectClient from "./lib/ClientComponent";
+import config from "client-config.json";
+import { withTranslations } from "./lib/TranslationContext";
 import Navigation from "./app/Navigation";
 import Content from "./app/Content";
 
 import AccountLink from "./app/partials/AccountLink";
 
-class App extends Component {
-  constructor(props) {
-    super(props);
-
-    this.state = {
-      account: null
-    };
-  }
-
-  async componentWillMount() {
-    this.setState({ account: await this.props.client.account() });
-  }
-
-  render() {
-    return (
+function App({ locale }) {
+  return (
+    <IntlProvider locale={locale.language} messages={locale.messages}>
       <div id="App" className="container-fluid p-0 h-100">
         <div className="row Header align-items-center mr-0">
           <div className="col">
@@ -31,22 +21,16 @@ class App extends Component {
           </div>
         </div>
 
-        <Content account={this.state.account} />
+        <Content />
 
         <hr />
 
         <div className="row mr-0 align-items-center">
           <div className="col-md">
             <div className="py-2 px-4">
-              <p className="mb-0">
-                Created by Ryan LeFevre, Sr. Software Engineer at{" "}
-                <a href="https://www.hodinkee.com" target="_blank">
-                  HODINKEE
-                </a>
-              </p>
+              <p className="mb-0">Created by Ryan LeFevre (@meltingice)</p>
               <p>
-                Donations:{" "}
-                <AccountLink account="xrb_3xemzomy4atzmq5u55mzzixqw9zxykyeyeiqia7rb1xy1saufpr8wzder1xh" />
+                Donations: <AccountLink account={config.donationAddress} />
               </p>
             </div>
           </div>
@@ -70,8 +54,8 @@ class App extends Component {
           </div>
         </div>
       </div>
-    );
-  }
+    </IntlProvider>
+  );
 }
 
-export default injectClient(App);
+export default withTranslations(App);

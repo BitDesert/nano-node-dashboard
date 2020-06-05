@@ -1,36 +1,15 @@
 import React, { Fragment } from "react";
+import { FormattedNumber } from "react-intl";
+import { TranslatedMessage } from "lib/TranslatedMessage";
 import moment from "moment";
-import accounting from "accounting";
-import NanoNodeNinja from "../../../../lib/NanoNodeNinja";
+import NanoNodeNinja from "lib/NanoNodeNinja";
 
 export default class NodeNinjaAccount extends React.Component {
-  static getDerivedStateFromProps(nextProps, prevState) {
-    if (prevState.data && prevState.data.account !== nextProps.account) {
-      return { data: null };
-    }
-
-    return null;
-  }
-
-  constructor(props) {
-    super(props);
-
-    this.state = {
-      data: null
-    };
-
-    this.timeout = null;
-  }
+  state = { data: null };
+  timeout = null;
 
   componentDidMount() {
     this.fetchNinja();
-  }
-
-  componentDidUpdate(prevProps, prevState) {
-    if (prevProps.account !== this.props.account) {
-      this.clearTimeout();
-      this.fetchNinja();
-    }
   }
 
   componentWillUnmount() {
@@ -63,30 +42,52 @@ export default class NodeNinjaAccount extends React.Component {
         <div className="col-sm text-sm-right">
           <h2 className="mb-0">{data.alias}</h2>
           <p className="text-muted">
-            Verified by{" "}
-            <a
-              href={`https://mynano.ninja/account/${account}`}
-              className="text-muted"
-              target="_blank"
-            >
-              My Nano Ninja
-            </a>
+            <TranslatedMessage
+              id="ninja.verified_by"
+              values={{
+                link: (
+                  <a
+                    href={`https://mynano.ninja/account/${account}`}
+                    className="text-muted"
+                    target="_blank"
+                  >
+                    My Nano Ninja
+                  </a>
+                )
+              }}
+            />
           </p>
 
           {this.getNodeMonitorLink()}
         </div>
         <div className="col-sm mt-3 mt-sm-0">
           <h4>
-            Uptime{" "}
-            <small className="text-muted">
-              {accounting.formatNumber(data.uptime, 2)}%
-            </small>
+            <TranslatedMessage
+              id="ninja.uptime"
+              values={{
+                percent: (
+                  <small className="text-muted">
+                    <FormattedNumber
+                      value={data.uptime}
+                      maximumFractionDigits={2}
+                    />
+                    %
+                  </small>
+                )
+              }}
+            />
           </h4>
           <h4>
-            Last voted{" "}
-            <small className="text-muted">
-              {moment(data.lastVoted).fromNow()}
-            </small>
+            <TranslatedMessage
+              id="ninja.last_voted"
+              values={{
+                date: (
+                  <small className="text-muted">
+                    {moment(data.lastVoted).fromNow()}
+                  </small>
+                )
+              }}
+            />
           </h4>
 
           {this.getMonitorStatus()}
@@ -105,7 +106,7 @@ export default class NodeNinjaAccount extends React.Component {
         className="btn btn-nano-primary"
         target="_blank"
       >
-        Open Node Monitor
+        <TranslatedMessage id="ninja.monitor_link" />
       </a>
     );
   }
@@ -117,21 +118,43 @@ export default class NodeNinjaAccount extends React.Component {
     return (
       <Fragment>
         <h4>
-          Sync status{" "}
-          <small className="text-muted">
-            {accounting.formatNumber(data.monitor.sync, 2)}%
-          </small>
+          <TranslatedMessage
+            id="ninja.sync_status"
+            values={{
+              status: (
+                <small className="text-muted">
+                  <FormattedNumber
+                    value={data.monitor.sync}
+                    maximumFractionDigits={2}
+                  />
+                  %
+                </small>
+              )
+            }}
+          />
         </h4>
         <h4>
-          Block count{" "}
-          <small className="text-muted">
-            {accounting.formatNumber(data.monitor.blocks)}
-          </small>
+          <TranslatedMessage
+            id="ninja.block_count"
+            values={{
+              count: (
+                <small className="text-muted">
+                  <FormattedNumber value={data.monitor.blocks} />
+                </small>
+              )
+            }}
+          />
         </h4>
 
         <h4>
-          Node version{" "}
-          <small className="text-muted">{data.monitor.version}</small>
+          <TranslatedMessage
+            id="ninja.node_version"
+            values={{
+              version: (
+                <small className="text-muted">{data.monitor.version}</small>
+              )
+            }}
+          />
         </h4>
       </Fragment>
     );

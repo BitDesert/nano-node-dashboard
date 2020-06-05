@@ -1,5 +1,6 @@
 import React from "react";
 import QRCode from "qrcode";
+import config from "client-config.json";
 
 export default class AccountQR extends React.PureComponent {
   state = {
@@ -18,8 +19,14 @@ export default class AccountQR extends React.PureComponent {
 
   async generateDataUrl() {
     const { account } = this.props;
-    const dataUrl = await QRCode.toDataURL(`xrb:${account}`);
+    const dataUrl = await QRCode.toDataURL(this.encodedData);
+
     this.setState({ dataUrl });
+  }
+
+  get encodedData() {
+    const { account } = this.props;
+    return `${config.currency.qrPrefix}:${account}`;
   }
 
   render() {
@@ -27,6 +34,10 @@ export default class AccountQR extends React.PureComponent {
     const { account, ...otherProps } = this.props;
     if (!dataUrl) return null;
 
-    return <img src={dataUrl} {...otherProps} />;
+    return (
+      <a className="d-block" href={this.encodedData}>
+        <img src={dataUrl} {...otherProps} />
+      </a>
+    );
   }
 }

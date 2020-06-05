@@ -1,15 +1,18 @@
 import React from "react";
+import { TranslatedMessage } from "lib/TranslatedMessage";
 import AccountLink from "../../AccountLink";
 import BlockLink from "../../BlockLink";
 import PriceWithConversions from "../../PriceWithConversions";
 import OptionalField from "../../OptionalField";
-import { formatTimestamp } from "../../../../lib/util";
+import RawBlockContents from "./RawBlockContents";
+import { formatTimestamp } from "lib/util";
+import config from "client-config.json";
 
 export default function SendBlock({ block }) {
   return (
     <div className="Block">
       <h4 className="mb-0">
-        Sender{" "}
+        <TranslatedMessage id="block.sender" />{" "}
         <small>
           <AccountLink
             account={block.block_account}
@@ -19,11 +22,13 @@ export default function SendBlock({ block }) {
         </small>
       </h4>
       <p>
-        <small>The account that initiated the transaction</small>
+        <small>
+          <TranslatedMessage id="block.sender.desc" />
+        </small>
       </p>
 
       <h4 className="mb-0">
-        Recipient{" "}
+        <TranslatedMessage id="block.recipient" />{" "}
         <small>
           <AccountLink
             account={block.contents.destination}
@@ -33,37 +38,54 @@ export default function SendBlock({ block }) {
         </small>
       </h4>
       <p>
-        <small>The account that is receiving the transaction</small>
+        <small>
+          <TranslatedMessage id="block.recipient.desc" />
+        </small>
       </p>
 
       <h4 className="mb-0">
-        Amount{" "}
+        <span className="text-capitalize">
+          <TranslatedMessage id="amount" />
+        </span>{" "}
         <small className="text-muted">
           <PriceWithConversions
+            raw
             amount={block.amount}
-            currencies={["nano", "usd", "btc"]}
+            currencies={["base", "usd", "btc"]}
+            precision={{ base: 20, btc: 6, usd: 4 }}
+          />
+        </small>
+      </h4>
+      <p className="text-muted mb-0">
+        <small>{block.amount} raw</small>
+      </p>
+      <p>
+        <small>
+          <TranslatedMessage
+            id="block.send.amount_desc"
+            values={{ currencyShortName: config.currency.shortName }}
+          />
+        </small>
+      </p>
+
+      <h4 className="mb-0">
+        <span className="text-capitalize">
+          <TranslatedMessage id="date" />
+        </span>{" "}
+        <small className="text-muted">
+          <OptionalField
+            value={formatTimestamp(block.timestamp, block.local_timestamp)}
           />
         </small>
       </h4>
       <p>
-        <small>The amount of NANO that was sent in this transaction</small>
-      </p>
-
-      <h4 className="mb-0">
-        Date{" "}
-        <small className="text-muted">
-          <OptionalField value={formatTimestamp(block.timestamp)} />
-        </small>
-      </h4>
-      <p>
         <small>
-          The date and time this block was discovered converted to your local
-          time
+          <TranslatedMessage id="block.timestamp.desc" />
         </small>
       </p>
 
       <h5 className="mb-0">
-        Previous Block{" "}
+        <TranslatedMessage id="block.previous" />{" "}
         <small>
           <BlockLink
             hash={block.contents.previous}
@@ -72,19 +94,23 @@ export default function SendBlock({ block }) {
         </small>
       </h5>
       <p>
-        <small>The previous block in this account's chain</small>
+        <small>
+          <TranslatedMessage id="block.previous.desc" />
+        </small>
       </p>
 
       <h5>
-        Proof of Work{" "}
+        <TranslatedMessage id="block.pow" />{" "}
         <small className="text-muted break-word">{block.contents.work}</small>
       </h5>
       <h5>
-        Signature{" "}
+        <TranslatedMessage id="block.signature" />{" "}
         <small className="text-muted break-word">
           {block.contents.signature}
         </small>
       </h5>
+
+      <RawBlockContents block={block} className="mt-5" />
     </div>
   );
 }

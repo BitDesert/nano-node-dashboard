@@ -1,33 +1,45 @@
 import React from "react";
+import { injectIntl } from "react-intl";
 import { withRouter } from "react-router-dom";
+import { withDefault } from "lib/TranslatedMessage";
+
+import ValidatedSearch from "./ValidatedSearch";
 
 class GlobalSearch extends React.PureComponent {
   state = {
-    search: ""
+    search: "",
+    type: null,
+    valid: false
   };
 
   onSubmit(e) {
-    const { search } = this.state;
+    if (e) e.preventDefault();
+
+    console.log("Submit!");
+
+    const { search, valid, type } = this.state;
     const { history } = this.props;
 
-    e.preventDefault();
-    history.push(`/explorer/auto/${search}`);
-    this.setState({ search: "" });
+    if (!valid) return;
+
+    history.push(`/explorer/${type}/${search}`);
+    this.setState({ search: "", valid: false });
   }
 
   render() {
+    const { formatMessage } = this.props.intl;
     return (
-      <form className="ml-2" onSubmit={this.onSubmit.bind(this)}>
-        <input
-          type="text"
-          className="form-control"
-          placeholder="Search for a Nano address or tx"
-          value={this.state.search}
-          onChange={e => this.setState({ search: e.target.value })}
+      <form onSubmit={this.onSubmit.bind(this)}>
+        <ValidatedSearch
+          placeholder={formatMessage(withDefault({ id: "search" }))}
+          onChange={({ search, type, valid }) =>
+            this.setState({ search, type, valid })
+          }
+          onSubmit={this.onSubmit.bind(this)}
         />
       </form>
     );
   }
 }
 
-export default withRouter(GlobalSearch);
+export default withRouter(injectIntl(GlobalSearch));

@@ -1,44 +1,24 @@
-import React from "react";
-import accounting from "accounting";
+import React, { Fragment } from "react";
+import { FormattedNumber } from "react-intl";
+import { TranslatedMessage } from "lib/TranslatedMessage";
 
-import injectClient from "../../../../../lib/ClientComponent";
+import HistoryEntry from "./HistoryEntry";
 import AccountLink from "../../../AccountLink";
 import BlockLink from "../../../BlockLink";
-import { keyToPublicAccountId, formatTimestamp } from "../../../../../lib/util";
+import { formatTimestamp } from "lib/util";
 import OptionalField from "../../../OptionalField";
+import { apiClient } from "lib/Client";
+import Currency from "lib/Currency";
+import config from "client-config.json";
 
-class HistoryStateBlock extends React.Component {
-  state = {
-    sendBlock: null
-  };
-
-  componentDidMount() {
-    this.fetchSendBlock();
-  }
-
-  componentDidUpdate(prevProps, prevState) {
-    if (prevProps.block.hash !== this.props.block.hash) {
-      this.fetchSendBlock();
-    }
-  }
-
-  async fetchSendBlock() {
-    if (!["receive", "open"].includes(this.props.block.subtype)) return;
-
-    const { block } = this.props;
-    const sendBlock = await this.props.client.block(block.link);
-    this.setState({ sendBlock });
-  }
-
+export default class HistoryStateBlock extends React.PureComponent {
   transactionAccount() {
     const { block } = this.props;
     switch (block.subtype) {
       case "receive":
       case "open":
-        const { sendBlock } = this.state;
-        return sendBlock ? sendBlock.block_account : null;
       case "send":
-        return keyToPublicAccountId(block.link);
+        return block.account;
       case "change":
         return block.representative;
     }
@@ -77,9 +57,9 @@ class HistoryStateBlock extends React.Component {
     switch (block.subtype) {
       case "open":
       case "receive":
-        return "from";
+        return <TranslatedMessage id="block.from" />;
       case "send":
-        return "to";
+        return <TranslatedMessage id="block.to" />;
       default:
         return "";
     }
@@ -88,31 +68,56 @@ class HistoryStateBlock extends React.Component {
   render() {
     const { block } = this.props;
     return (
-      <tr>
-        <td>
-          State <span className={this.statusClass()}>{block.subtype}</span>
-        </td>
-        <td>
-          <span className="text-muted">{this.accountAction()}</span>{" "}
-          <AccountLink
-            account={this.transactionAccount()}
-            ninja={block.subtype === "change"}
-            className="text-dark"
+      <HistoryEntry
+        transactionAccount={block.account}
+        type={
+          <Fragment>
+            <TranslatedMessage id="block.state" />{" "}
+            <span className={this.statusClass()}>
+              <TranslatedMessage id={`block.subtype.${block.subtype}`} />
+            </span>
+          </Fragment>
+        }
+        account={
+          <Fragment>
+            <span className="text-muted">{this.accountAction()}</span>{" "}
+            <AccountLink
+              account={this.transactionAccount()}
+              ninja
+              className="text-dark break-word"
+            />
+          </Fragment>
+        }
+        amount={
+          <span className={this.statusClass()}>
+            {this.transactionSymbol()}
+            {block.amount ? (
+              <Fragment>
+                <FormattedNumber
+                  value={Currency.fromRaw(block.amount)}
+                  minimumFractionDigits={2}
+                  maximumFractionDigits={6}
+                />{" "}
+                {config.currency.shortName}
+              </Fragment>
+            ) : (
+              "N/A"
+            )}
+          </span>
+        }
+        date={
+          <OptionalField
+            value={formatTimestamp(block.timestamp, block.local_timestamp)}
           />
-        </td>
-        <td className={this.statusClass()}>
-          {this.transactionSymbol()}
-          {accounting.formatNumber(block.amount, 6)} NANO
-        </td>
-        <td>
-          <OptionalField value={formatTimestamp(block.timestamp)} />
-        </td>
-        <td>
-          <BlockLink hash={block.hash} short className="text-muted" />
-        </td>
-      </tr>
+        }
+        block={
+          <div className="text-truncate">
+            <small>
+              <BlockLink hash={block.hash} className="text-muted" />
+            </small>
+          </div>
+        }
+      />
     );
   }
 }
-
-export default injectClient(HistoryStateBlock);

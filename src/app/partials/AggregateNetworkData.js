@@ -1,11 +1,16 @@
 import React, { Fragment } from "react";
-import _ from "lodash";
-import accounting from "accounting";
-import injectClient from "../../lib/ClientComponent";
+import compact from "lodash/compact";
+import min from "lodash/min";
+import max from "lodash/max";
+import mean from "lodash/mean";
+import { FormattedNumber } from "react-intl";
+import { TranslatedMessage } from "lib/TranslatedMessage";
+import config from "client-config.json";
+import { apiClient } from "lib/Client";
 
 import DiscoveredPeers from "./network/DiscoveredPeers";
 
-class AggregateNetworkData extends React.Component {
+export default class AggregateNetworkData extends React.Component {
   constructor(props) {
     super(props);
 
@@ -25,18 +30,18 @@ class AggregateNetworkData extends React.Component {
   }
 
   async updateStats() {
-    const peers = await this.props.client.networkData();
+    const peers = await apiClient.networkData();
     this.setState({ peers });
     this.timeout = setTimeout(this.updateStats.bind(this), 10000);
   }
 
   blockStats() {
-    const currentBlocks = _.compact(
+    const currentBlocks = compact(
       this.representativePeers().map(peer =>
         parseInt(peer.data.currentBlock, 10)
       )
     );
-    const uncheckedBlocks = _.compact(
+    const uncheckedBlocks = compact(
       this.representativePeers().map(peer =>
         parseInt(peer.data.uncheckedBlocks, 10)
       )
@@ -44,16 +49,16 @@ class AggregateNetworkData extends React.Component {
 
     return {
       currentBlocks: {
-        mean: Math.round(_.mean(currentBlocks)),
+        mean: Math.round(mean(currentBlocks)),
         median: this._median(currentBlocks),
-        min: _.min(currentBlocks),
-        max: _.max(currentBlocks)
+        min: min(currentBlocks),
+        max: max(currentBlocks)
       },
       uncheckedBlocks: {
-        mean: Math.round(_.mean(uncheckedBlocks)),
+        mean: Math.round(mean(uncheckedBlocks)),
         median: this._median(uncheckedBlocks),
-        min: _.min(uncheckedBlocks),
-        max: _.max(uncheckedBlocks)
+        min: min(uncheckedBlocks),
+        max: max(uncheckedBlocks)
       }
     };
   }
@@ -66,7 +71,6 @@ class AggregateNetworkData extends React.Component {
   }
 
   servicePeers() {
-    const { config } = this.props;
     const { peers } = this.state;
 
     return peers.filter(peer => config.serviceMonitors.includes(peer.url));
@@ -80,21 +84,31 @@ class AggregateNetworkData extends React.Component {
       <Fragment>
         <div className="row mt-5 align-items-center">
           <div className="col-md">
-            <h1 className="mb-0">Aggregate Network Stats</h1>
+            <h1 className="mb-0">
+              <TranslatedMessage id="network.aggregate.title" />
+            </h1>
             <p className="text-muted mb-0">
-              Stats are collected from discovered{" "}
-              <a
-                href="https://github.com/NanoTools/nanoNodeMonitor"
-                target="_blank"
-              >
-                nanoNodeMonitors
-              </a>{" "}
-              and filtered to only include nodes with voting weight
+              <TranslatedMessage
+                id="network.aggregate.desc"
+                values={{
+                  link: (
+                    <a
+                      href="https://github.com/NanoTools/nanoNodeMonitor"
+                      target="_blank"
+                    >
+                      nanoNodeMonitors
+                    </a>
+                  )
+                }}
+              />
             </p>
           </div>
           <div className="col-auto">
             <h4 className="text-muted mb-0">
-              Tracking {this.representativePeers().length} nodes
+              <TranslatedMessage
+                id="network.tracking_nodes"
+                values={{ count: this.representativePeers().length }}
+              />
             </h4>
           </div>
         </div>
@@ -103,80 +117,137 @@ class AggregateNetworkData extends React.Component {
 
         <div className="row mt-5">
           <div className="col-sm text-sm-center">
-            <p className="text-muted mb-2">Average Sync Status</p>
+            <p className="text-muted mb-2">
+              <TranslatedMessage id="network.avg_sync_status" />
+            </p>
             <h3>
               {Math.round(
-                blockStats.currentBlocks.mean /
-                  blockStats.currentBlocks.max *
+                (blockStats.currentBlocks.mean / blockStats.currentBlocks.max) *
                   10000
               ) / 100}%
             </h3>
           </div>
           <div className="col-sm text-sm-center">
-            <p className="text-muted mb-2">Average Block Count</p>
-            <h3>{accounting.formatNumber(blockStats.currentBlocks.mean)}</h3>
+            <p className="text-muted mb-2">
+              <TranslatedMessage id="network.avg_block_count" />
+            </p>
+            <h3>
+              <FormattedNumber
+                value={blockStats.currentBlocks.mean}
+                minimumFractionDigits={0}
+              />
+            </h3>
           </div>
           <div className="col-sm text-sm-center">
-            <p className="text-muted mb-2">Median Block Count</p>
-            <h3>{accounting.formatNumber(blockStats.currentBlocks.median)}</h3>
+            <p className="text-muted mb-2">
+              <TranslatedMessage id="network.median_block_count" />
+            </p>
+            <h3>
+              <FormattedNumber
+                value={blockStats.currentBlocks.median}
+                minimumFractionDigits={0}
+              />
+            </h3>
           </div>
           <div className="col-sm text-sm-center">
-            <p className="text-muted mb-2">Minimum Block Count</p>
-            <h3>{accounting.formatNumber(blockStats.currentBlocks.min)}</h3>
+            <p className="text-muted mb-2">
+              <TranslatedMessage id="network.minimum_block_count" />
+            </p>
+            <h3>
+              <FormattedNumber
+                value={blockStats.currentBlocks.min}
+                minimumFractionDigits={0}
+              />
+            </h3>
           </div>
           <div className="col-sm text-sm-center">
-            <p className="text-muted mb-2">Maximum Block Count</p>
-            <h3>{accounting.formatNumber(blockStats.currentBlocks.max)}</h3>
+            <p className="text-muted mb-2">
+              <TranslatedMessage id="network.maximum_block_count" />
+            </p>
+            <h3>
+              <FormattedNumber
+                value={blockStats.currentBlocks.max}
+                minimumFractionDigits={0}
+              />
+            </h3>
           </div>
         </div>
 
         <div className="row mt-5">
           <div className="col-sm text-sm-center">
-            <p className="text-muted mb-2">Average Percent Unchecked</p>
+            <p className="text-muted mb-2">
+              <TranslatedMessage id="network.avg_percent_unchecked" />
+            </p>
             <h3>
               {Math.round(
-                blockStats.uncheckedBlocks.mean /
+                (blockStats.uncheckedBlocks.mean /
                   (blockStats.currentBlocks.mean +
-                    blockStats.uncheckedBlocks.mean) *
+                    blockStats.uncheckedBlocks.mean)) *
                   10000
               ) / 100}%
             </h3>
           </div>
           <div className="col-sm text-sm-center">
-            <p className="text-muted mb-2">Average Unchecked Blocks</p>
-            <h3>{accounting.formatNumber(blockStats.uncheckedBlocks.mean)}</h3>
-          </div>
-          <div className="col-sm text-sm-center">
-            <p className="text-muted mb-2">Median Unchecked Blocks</p>
+            <p className="text-muted mb-2">
+              <TranslatedMessage id="network.avg_unchecked" />
+            </p>
             <h3>
-              {accounting.formatNumber(blockStats.uncheckedBlocks.median)}
+              <FormattedNumber
+                value={blockStats.uncheckedBlocks.mean}
+                minimumFractionDigits={0}
+              />
             </h3>
           </div>
           <div className="col-sm text-sm-center">
-            <p className="text-muted mb-2">Minimum Unchecked Blocks</p>
-            <h3>{accounting.formatNumber(blockStats.uncheckedBlocks.min)}</h3>
+            <p className="text-muted mb-2">
+              <TranslatedMessage id="network.median_unchecked" />
+            </p>
+            <h3>
+              <FormattedNumber
+                value={blockStats.uncheckedBlocks.median}
+                minimumFractionDigits={0}
+              />
+            </h3>
           </div>
           <div className="col-sm text-sm-center">
-            <p className="text-muted mb-2">Maximum Unchecked Blocks</p>
-            <h3>{accounting.formatNumber(blockStats.uncheckedBlocks.max)}</h3>
+            <p className="text-muted mb-2">
+              <TranslatedMessage id="network.min_unchecked" />
+            </p>
+            <h3>
+              <FormattedNumber
+                value={blockStats.uncheckedBlocks.min}
+                minimumFractionDigits={0}
+              />
+            </h3>
+          </div>
+          <div className="col-sm text-sm-center">
+            <p className="text-muted mb-2">
+              <TranslatedMessage id="network.max_unchecked" />
+            </p>
+            <h3>
+              <FormattedNumber
+                value={blockStats.uncheckedBlocks.max}
+                minimumFractionDigits={0}
+              />
+            </h3>
           </div>
         </div>
 
         <div className="row mt-5 align-items-center">
           <div className="col-sm">
-            <h3 className="mb-0">NANO Services</h3>
+            <h3 className="mb-0">
+              <TranslatedMessage
+                id="network.nano_services"
+                values={{ currency: config.currency.name }}
+              />
+            </h3>
             <p className="text-muted mb-0">
-              The current status of known NANO services. Wallets, tip bots,
-              merchant tools, etc.
+              <TranslatedMessage
+                id="network.nano_services_desc"
+                values={{ currency: config.currency.name }}
+              />
             </p>
-            <p>
-              <small>
-                Synced within:{" "}
-                <span className="text-success">1,000 blocks</span>{" "}
-                <span className="text-warning">10,000 blocks</span>{" "}
-                <span className="text-danger">greater than 10,000 blocks</span>
-              </small>
-            </p>
+            <SyncThresholds />
           </div>
         </div>
 
@@ -184,22 +255,20 @@ class AggregateNetworkData extends React.Component {
 
         <div className="row mt-5 align-items-center">
           <div className="col-sm">
-            <h3 className="mb-0">Discovered Peers</h3>
+            <h3 className="mb-0">
+              <TranslatedMessage id="network.discovered_peers" />
+            </h3>
             <p className="text-muted mb-0">
-              All discovered peers running nanoNodeMonitor, sorted by name.
+              <TranslatedMessage id="network.discovered_peers_desc" />
             </p>
-            <p>
-              <small>
-                Synced within:{" "}
-                <span className="text-success">1,000 blocks</span>{" "}
-                <span className="text-warning">10,000 blocks</span>{" "}
-                <span className="text-danger">greater than 10,000 blocks</span>
-              </small>
-            </p>
+            <SyncThresholds />
           </div>
           <div className="col-auto">
             <h4 className="text-muted mb-0">
-              {this.state.peers.length} monitors discovered
+              <TranslatedMessage
+                id="network.monitor_count"
+                values={{ count: this.state.peers.length }}
+              />
             </h4>
           </div>
         </div>
@@ -223,4 +292,28 @@ class AggregateNetworkData extends React.Component {
   }
 }
 
-export default injectClient(AggregateNetworkData);
+const SyncThresholds = () => (
+  <p>
+    <small>
+      <TranslatedMessage id="network.synced_within" />{" "}
+      <span className="text-success">
+        <TranslatedMessage
+          id="network.synced_blocks"
+          values={{ count: <FormattedNumber value={1000} /> }}
+        />
+      </span>{" "}
+      <span className="text-warning">
+        <TranslatedMessage
+          id="network.synced_blocks"
+          values={{ count: <FormattedNumber value={10000} /> }}
+        />
+      </span>{" "}
+      <span className="text-danger">
+        <TranslatedMessage
+          id="network.synced_greater_than"
+          values={{ count: <FormattedNumber value={10000} /> }}
+        />
+      </span>
+    </small>
+  </p>
+);

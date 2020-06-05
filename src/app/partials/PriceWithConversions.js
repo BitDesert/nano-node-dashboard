@@ -1,28 +1,38 @@
-import React from "react";
-import accounting from "accounting";
-import injectClient from "../../lib/ClientComponent";
+import React, { Fragment } from "react";
+import { FormattedNumber } from "react-intl";
+import { withTicker } from "lib/TickerContext";
+import Currency from "lib/Currency";
+import config from "client-config.json";
 
 class PriceWithConversions extends React.PureComponent {
   static defaultProps = {
-    nano: true,
+    currencies: ["base"],
     precision: {
-      nano: 6,
+      base: 6,
       btc: 6,
       usd: 2
     }
   };
 
+  get amount() {
+    if (this.props.raw) {
+      return Currency.fromRaw(this.props.amount);
+    }
+
+    return parseFloat(this.props.amount, 10);
+  }
+
   getValueForCurrency(cur) {
-    const { amount, ticker } = this.props;
+    const { ticker } = this.props;
     if (!ticker) return 0;
 
     switch (cur) {
-      case "nano":
-        return amount;
+      case "base":
+        return this.amount;
       case "usd":
-        return amount * parseFloat(ticker.price_usd, 10);
+        return this.amount * parseFloat(ticker.priceUSD, 10);
       case "btc":
-        return amount * parseFloat(ticker.price_btc, 10);
+        return this.amount * parseFloat(ticker.priceBTC, 10);
       default:
         return new Error(`${cur} is not currently supported`);
     }
@@ -32,15 +42,35 @@ class PriceWithConversions extends React.PureComponent {
     const value = this.getValueForCurrency(cur);
 
     switch (cur) {
-      case "nano":
-        return `${accounting.formatNumber(
-          value,
-          this.props.precision.nano
-        )} NANO`;
+      case "base":
+        return (
+          <Fragment key="base">
+            <FormattedNumber
+              value={value}
+              minimumFractionDigits={Math.min(2, this.props.precision.base)}
+              maximumFractionDigits={this.props.precision.base}
+            />{" "}
+            {config.currency.shortName}
+          </Fragment>
+        );
       case "usd":
-        return accounting.formatMoney(value, "$", this.props.precision.usd);
+        return (
+          <FormattedNumber
+            key="usd"
+            value={value}
+            style="currency"
+            currency="USD"
+          />
+        );
       case "btc":
-        return accounting.formatMoney(value, "₿", this.props.precision.btc);
+        return (
+          <Fragment key="btc">
+            ₿<FormattedNumber
+              value={value}
+              maximumFractionDigits={this.props.precision.btc}
+            />
+          </Fragment>
+        );
       default:
         return null;
     }
@@ -50,10 +80,9 @@ class PriceWithConversions extends React.PureComponent {
     const { currencies, ticker } = this.props;
     if (!ticker) return null;
 
-    let conversions = currencies.map(cur =>
-      this.getDisplayValueForCurrency(cur)
-    );
-    return conversions.join(" / ");
+    return currencies
+      .map(cur => this.getDisplayValueForCurrency(cur))
+      .reduce((prev, cur) => [prev, " / ", cur]);
   }
 
   render() {
@@ -69,4 +98,4 @@ class PriceWithConversions extends React.PureComponent {
   }
 }
 
-export default injectClient(PriceWithConversions);
+export default withTicker(PriceWithConversions);

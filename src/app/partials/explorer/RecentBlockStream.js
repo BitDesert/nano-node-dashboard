@@ -1,8 +1,11 @@
 import React, { Fragment } from "react";
-import ReactCSSTransitionGroup from "react-addons-css-transition-group";
-import accounting from "accounting";
-import injectClient from "../../../lib/ClientComponent";
-import AccountWebsocket from "../../../lib/AccountWebsocket";
+import { FormattedNumber } from "react-intl";
+import { TranslatedMessage } from "lib/TranslatedMessage";
+import { CSSTransitionGroup } from "react-transition-group";
+import AccountWebsocket from "lib/AccountWebsocket";
+
+import { apiClient } from "lib/Client";
+import config from "client-config.json";
 
 import ChangeBlock from "./stream/ChangeBlock";
 import OpenBlock from "./stream/OpenBlock";
@@ -10,7 +13,7 @@ import ReceiveBlock from "./stream/ReceiveBlock";
 import SendBlock from "./stream/SendBlock";
 import StateBlock from "./stream/StateBlock";
 
-class RecentBlockStream extends React.Component {
+export default class RecentBlockStream extends React.Component {
   constructor(props) {
     super(props);
 
@@ -19,7 +22,7 @@ class RecentBlockStream extends React.Component {
       throughput: 0
     };
 
-    this.websocket = new AccountWebsocket(this.props.config.websocketServer);
+    this.websocket = new AccountWebsocket(config.websocketServer);
     this.tpsInterval = null;
   }
 
@@ -50,27 +53,32 @@ class RecentBlockStream extends React.Component {
   }
 
   async calculateThroughput() {
-    const tps = await this.props.client.networkTps("1m");
+    const tps = await apiClient.networkTps("1m");
     this.setState({ throughput: tps });
   }
 
   render() {
     const { throughput } = this.state;
 
-    if (!this.props.config.websocketServer) return null;
+    if (!config.websocketServer) return null;
 
     return (
       <Fragment>
         <div className="row align-items-center">
           <div className="col-sm">
-            <h3 className="mb-0">Recent Transactions</h3>
+            <h3 className="mb-0">
+              <TranslatedMessage id="stream.title" />
+            </h3>
             <p className="text-muted mb-0">
-              A real-time stream of transactions on the Nano network
+              <TranslatedMessage
+                id="stream.desc"
+                values={{ currency: config.currency.name }}
+              />
             </p>
           </div>
           <div className="col-auto">
             <h5 className="mb-0">
-              {accounting.formatNumber(throughput, 1)}{" "}
+              <FormattedNumber value={throughput} maximumFractionDigits={2} />{" "}
               <span className="text-muted">tx / sec</span>
             </h5>
           </div>
@@ -87,20 +95,24 @@ class RecentBlockStream extends React.Component {
     const { events } = this.state;
     if (events.length === 0) return this.emptyState();
     return (
-      <ReactCSSTransitionGroup
+      <CSSTransitionGroup
         transitionName="Transaction"
         transitionEnterTimeout={500}
         transitionLeave={false}
       >
-        {events.map(event => <RecentBlock key={event.hash} event={event} />)}
-      </ReactCSSTransitionGroup>
+        {events.map(event => (
+          <RecentBlock key={event.hash} event={event} />
+        ))}
+      </CSSTransitionGroup>
     );
   }
 
   emptyState() {
     return (
       <div className="my-5 text-center">
-        <h5 className="text-muted">Waiting for transactions...</h5>
+        <h5 className="text-muted">
+          <TranslatedMessage id="stream.waiting" />
+        </h5>
       </div>
     );
   }
@@ -132,5 +144,3 @@ const RecentBlock = ({ event }) => {
     </Fragment>
   );
 };
-
-export default injectClient(RecentBlockStream);

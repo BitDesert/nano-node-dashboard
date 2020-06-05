@@ -1,12 +1,15 @@
-import React, { Fragment } from "react";
+import React from "react";
+import { TranslatedMessage } from "lib/TranslatedMessage";
 import TpsCounter from "./TpsCounter";
 
 export default function NetworkThroughput() {
   return (
-    <Fragment>
-      <h2 className="mb-0">Network Throughput</h2>
+    <div>
+      <h2 className="mb-0">
+        <TranslatedMessage id="network.tps.title" />
+      </h2>
       <p className="text-muted">
-        Average checked blocks/sec over the given period
+        <TranslatedMessage id="network.tps.desc" />
       </p>
 
       <div className="row">
@@ -36,6 +39,6 @@ export default function NetworkThroughput() {
           <TpsCounter period="1w" title="1 week" />
         </div>
       </div>
-    </Fragment>
+    </div>
   );
 }

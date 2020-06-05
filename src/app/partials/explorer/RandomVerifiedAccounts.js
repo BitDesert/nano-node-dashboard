@@ -1,5 +1,6 @@
 import React, { Fragment } from "react";
-import _ from "lodash";
+import { TranslatedMessage } from "lib/TranslatedMessage";
+import sampleSize from "lodash/sampleSize";
 
 import AccountLink from "../AccountLink";
 
@@ -12,18 +13,30 @@ export default class RandomVerifiedAccounts extends React.Component {
     });
     const accounts = await data.json();
 
-    this.setState({ accounts: _.sampleSize(accounts, this.props.count) });
+    this.setState({ accounts: sampleSize(accounts, this.props.count) });
   }
 
   render() {
     return (
       <Fragment>
-        <h3 className="mb-0">Verified Accounts</h3>
+        <h3 className="mb-0">
+          <TranslatedMessage id="ninja.verified_accounts" />
+        </h3>
         <p className="text-muted">
-          A random sampling of accounts verified with{" "}
-          <a href="https://mynano.ninja" target="_blank" className="text-muted">
-            My Nano Ninja
-          </a>
+          <TranslatedMessage
+            id="ninja.verified_accounts.desc"
+            values={{
+              link: (
+                <a
+                  href="https://mynano.ninja"
+                  target="_blank"
+                  className="text-muted"
+                >
+                  My Nano Ninja
+                </a>
+              )
+            }}
+          />
         </p>
 
         <hr />

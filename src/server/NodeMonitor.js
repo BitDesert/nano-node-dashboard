@@ -1,49 +1,55 @@
-import fetchTimeout from "fetch-timeout";
+import { promisify } from "util";
+import curl from "curlrequest";
+import config from "../../server-config.json";
 
-const TIMEOUT = 5 * 1000;
+const request = promisify(curl.request.bind(curl));
+
+const TIMEOUT = 30;
 
 export default class NodeMonitor {
   static fromPeerAddress(peer) {
-    const match = peer.match(/\[::ffff:(\d+\.\d+\.\d+\.\d+)\]:\d+/);
-    if (match) return new NodeMonitor(`http://${match[1]}/api.php`);
+    const match = peer.match(/\[(?:\:\:ffff\:)?(.+)\]:\d+/);
+    if (match)
+      return new NodeMonitor(`http://${match[1]}/api.php`, "discovered");
     return null;
   }
 
-  constructor(apiUrl) {
+  constructor(apiUrl, source = "") {
     this.apiUrl = apiUrl;
+    this.source = source;
   }
 
   fetch() {
-    console.log("Checking", this.apiUrl);
+    console.log("Checking", `(${this.source})`, this.apiUrl);
 
     return new Promise((resolve, reject) => {
-      return fetchTimeout(
-        this.apiUrl,
-        {
-          headers: {
-            Accept: "application/json",
-            "Content-Type": "application/json"
-          }
+      return request({
+        url: this.apiUrl,
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json"
         },
-        TIMEOUT
-      )
+        timeout: TIMEOUT
+      })
         .then(resp => {
-          if (resp.ok) {
-            return resp.json();
+          const data = JSON.parse(resp);
+          if (data && data.nanoNodeAccount) {
+            if (this.currencyOk(data)) {
+              console.log("OK", `(${this.source})`, this.apiUrl);
+              resolve({ url: this.apiUrl, data: this.formatData(data) });
+            } else {
+              throw new Error(`Currency does not match for ${this.apiUrl}`);
+            }
           } else {
-            reject(`Received ${resp.status}`);
-          }
-        })
-        .then(data => {
-          if (data.nanoNodeAccount) {
-            console.log("OK", this.apiUrl);
-            resolve({ url: this.apiUrl, data: this.formatData(data) });
-          } else {
-            reject("Missing nanoNodeAccount data");
+            throw new Error(`Missing nanoNodeAccount data for ${this.apiUrl}`);
           }
         })
         .catch(reject);
     });
+  }
+
+  currencyOk(data) {
+    return !data.currency || data.currency === config.monitorCurrencyName;
   }
 
   formatData(data) {

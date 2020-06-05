@@ -1,18 +1,22 @@
-import React from "react";
+import React, { Fragment } from "react";
 import { Helmet } from "react-helmet";
-import accounting from "accounting";
 import moment from "moment";
-
-import injectClient from "../../lib/ClientComponent";
+import { FormattedNumber } from "react-intl";
+import { TranslatedMessage } from "lib/TranslatedMessage";
+import Currency from "lib/Currency";
 
 import AccountLink from "../partials/AccountLink";
 
-class NodeStatus extends React.Component {
+import { apiClient } from "lib/Client";
+import config from "client-config.json";
+
+export default class NodeStatus extends React.PureComponent {
   constructor(props) {
     super(props);
 
     this.statTimer = null;
     this.state = {
+      account: "",
       blockCount: {},
       version: {},
       weight: 0,
@@ -22,8 +26,13 @@ class NodeStatus extends React.Component {
   }
 
   async componentWillMount() {
-    this.setState({ version: await this.props.client.version() });
-    this.updateStats();
+    this.setState(
+      {
+        version: await apiClient.version(),
+        account: await apiClient.nodeAccount()
+      },
+      () => this.updateStats()
+    );
   }
 
   componentWillUnmount() {
@@ -35,10 +44,10 @@ class NodeStatus extends React.Component {
 
   async updateStats() {
     this.setState({
-      blockCount: await this.props.client.blockCount(),
-      weight: await this.props.client.weight(this.props.account),
-      systemInfo: await this.props.client.systemInfo(),
-      peerCount: await this.props.client.peerCount()
+      blockCount: await apiClient.blockCount(),
+      weight: await apiClient.weight(this.state.account),
+      systemInfo: await apiClient.systemInfo(),
+      peerCount: await apiClient.peerCount()
     });
 
     this.statTimer = setTimeout(this.updateStats.bind(this), 10000);
@@ -49,16 +58,16 @@ class NodeStatus extends React.Component {
 
     return (
       <div className="p-4">
-        <Helmet>
-          <title>Node Status</title>
-        </Helmet>
+        <Helmet title="Node Status" />
 
         <div className="row align-items-center">
           <div className="col-sm">
-            <h1 className="mb-0">Node Status</h1>
+            <h1 className="mb-0">
+              <TranslatedMessage id="nav.status" />
+            </h1>
             <p className="text-muted break-word">
               <AccountLink
-                account={this.props.account}
+                account={this.state.account}
                 className="text-muted"
               />
             </p>
@@ -75,40 +84,72 @@ class NodeStatus extends React.Component {
 
         <div className="row mt-5">
           <div className="col-sm text-sm-center">
-            <p className="text-muted mb-2">Blocks in Ledger</p>
-            <h2>{accounting.formatNumber(blockCount.count)}</h2>
+            <p className="text-muted mb-2">
+              <TranslatedMessage id="status.checked_blocks" />
+            </p>
+            <h2>
+              <FormattedNumber
+                value={blockCount.count || 0}
+                maximumFractionDigits={0}
+              />
+            </h2>
           </div>
           <div className="col-sm text-sm-center">
-            <p className="text-muted mb-2">Unchecked Blocks</p>
-            <h2>{accounting.formatNumber(blockCount.unchecked)}</h2>
+            <p className="text-muted mb-2">
+              <TranslatedMessage id="status.unchecked_blocks" />
+            </p>
+            <h2>
+              <FormattedNumber
+                value={blockCount.unchecked || 0}
+                maximumFractionDigits={0}
+              />
+            </h2>
           </div>
           <div className="col-sm text-sm-center">
-            <p className="text-muted mb-2">Voting Weight</p>
-            <h2>{accounting.formatNumber(weight)} NANO</h2>
+            <p className="text-muted mb-2">
+              <TranslatedMessage id="status.voting_weight" />
+            </p>
+            <h2>
+              <FormattedNumber
+                value={Currency.fromRaw(weight)}
+                maximumFractionDigits={0}
+              />{" "}
+              {config.currency.shortName}
+            </h2>
           </div>
           <div className="col-sm text-sm-center">
-            <p className="text-muted mb-2">Peers</p>
-            <h2>{accounting.formatNumber(peerCount)}</h2>
+            <p className="text-muted mb-2">
+              <TranslatedMessage id="status.peers" />
+            </p>
+            <h2>
+              <FormattedNumber value={peerCount} />
+            </h2>
           </div>
         </div>
 
         <div className="row mt-5">
           <div className="col-sm text-sm-center">
-            <p className="text-muted mb-2">Uptime</p>
+            <p className="text-muted mb-2">
+              <TranslatedMessage id="status.uptime" />
+            </p>
             <h2>{this.getUptime()}</h2>
           </div>
           <div className="col-sm text-sm-center">
-            <p className="text-muted mb-2">CPU Usage</p>
+            <p className="text-muted mb-2">
+              <TranslatedMessage id="status.cpu_usage" />
+            </p>
             <h2>{this.getCpuUsage()}</h2>
           </div>
           <div className="col-sm text-sm-center">
             <p className="text-muted mb-2">
-              Memory <small className="text-muted">(used / total)</small>
+              <TranslatedMessage id="status.memory" />
             </p>
             <h2>{this.getMemory()}</h2>
           </div>
           <div className="col-sm text-sm-center">
-            <p className="text-muted mb-2">Database Size</p>
+            <p className="text-muted mb-2">
+              <TranslatedMessage id="status.database" />
+            </p>
             <h2>{this.getDatabaseSize()}</h2>
           </div>
         </div>
@@ -138,7 +179,7 @@ class NodeStatus extends React.Component {
     const formatMemory = amt => {
       amt = amt / 1024 / 1024;
       if (amt > 1024) {
-        return `${Math.round(amt / 1024.0 * 100.0) / 100.0}GB`;
+        return `${Math.round((amt / 1024.0) * 100.0) / 100.0}GB`;
       }
 
       return `${Math.round(amt * 100.0) / 100.0}MB`;
@@ -153,10 +194,14 @@ class NodeStatus extends React.Component {
     const { systemInfo } = this.state;
     if (!systemInfo.dbSize) return "Unknown";
     let size = systemInfo.dbSize / 1024.0 / 1024.0;
-    return size > 1024
-      ? `${accounting.formatNumber(size / 1024, 2)}GB`
-      : `${accounting.formatNumber(size, 2)}MB`;
+    return size > 1024 ? (
+      <Fragment>
+        <FormattedNumber value={size / 1024} maximumFractionDigits={2} />GB
+      </Fragment>
+    ) : (
+      <Fragment>
+        <FormattedNumber value={size} maximumFractionDigits={2} />MB
+      </Fragment>
+    );
   }
 }
-
-export default injectClient(NodeStatus);

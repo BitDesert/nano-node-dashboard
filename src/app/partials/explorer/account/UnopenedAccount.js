@@ -1,15 +1,20 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import { TranslatedMessage } from "lib/TranslatedMessage";
+import config from "client-config.json";
 
-export default function UnopenedAccount({ account }) {
+export default function UnopenedAccount() {
   return (
-    <div className="row my-5 justify-content-center">
-      <div className="col-md-6 text-center">
-        <h2>This account hasn't been opened yet</h2>
+    <div className="row mt-5 justify-content-center">
+      <div className="col col-md-6 text-center">
+        <h2>
+          <TranslatedMessage id="account.unopened.title" />
+        </h2>
         <p>
-          While the account address is valid, no blocks have been published to
-          its chain yet. If NANO has been sent to this account, it still needs
-          to publish a corresponding block to pocket the funds.
+          <TranslatedMessage
+            id="account.unopened.desc"
+            values={{ currencyShortName: config.currency.shortName }}
+          />
         </p>
       </div>
     </div>

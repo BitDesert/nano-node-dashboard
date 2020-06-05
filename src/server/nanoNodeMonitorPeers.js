@@ -20,7 +20,7 @@ async function updateKnownMonitors() {
     .filter(
       peer =>
         !config.blacklistedPeers.includes(
-          peer.match(/\[::ffff:(\d+\.\d+\.\d+\.\d+)\]:\d+/)[1]
+          peer.match(/\[(?:\:\:ffff\:)?(.+)\]:\d+/)[1]
         )
     )
     .map(peer => NodeMonitor.fromPeerAddress(peer));
@@ -50,36 +50,29 @@ async function updateKnownMonitors() {
 
 async function fetchNanoNodeNinjaMonitors() {
   let accounts = [];
-  let monitors = [];
 
   try {
     console.log("Gathering monitors from mynano.ninja");
-    const resp = await fetch("https://mynano.ninja/api/accounts/verified");
+    const resp = await fetch("https://mynano.ninja/api/accounts/monitors");
     accounts = await resp.json();
   } catch (e) {
     return [];
   }
 
-  console.log(`Checking ${accounts.length} accounts for node monitors...`);
-  for (let i = 0; i < accounts.length; i++) {
-    try {
-      const accountResp = await fetch(
-        `https://mynano.ninja/api/accounts/${accounts[i].account}`
-      );
-      const accountData = await accountResp.json();
-
+  return _.compact(
+    accounts.map(accountData => {
       if (accountData.monitor && accountData.monitor.url) {
-        console.log("OK", accountData.monitor.url);
-        monitors.push(
-          new NodeMonitor(
-            `${accountData.monitor.url.replace(/(\/$)/, "")}/api.php`
-          )
-        );
-      }
-    } catch (e) {}
-  }
+        // Some servies, like Brainblocks, gave their monitor URL as a direct link to
+        // the API response. This attempts to fix those instances.
+        let apiUrl = /\.php$/.test(accountData.monitor.url)
+          ? accountData.monitor.url
+          : `${accountData.monitor.url.replace(/(\/$)/, "")}/api.php`;
 
-  return monitors;
+        console.log("mynano.ninja - OK", apiUrl);
+        return new NodeMonitor(apiUrl, "mynano.ninja");
+      }
+    })
+  );
 }
 
 async function checkKnownMonitors() {
@@ -88,7 +81,9 @@ async function checkKnownMonitors() {
   const data = _.compact(
     await Promise.all(
       KNOWN_MONITORS.map(url =>
-        new NodeMonitor(url).fetch().catch(e => console.error(e.message))
+        new NodeMonitor(url, "known")
+          .fetch()
+          .catch(e => console.error(e.message))
       )
     )
   );
@@ -99,7 +94,7 @@ async function checkKnownMonitors() {
     JSON.stringify(data)
   );
 
-  setTimeout(checkKnownMonitors, 30 * 1000);
+  setTimeout(checkKnownMonitors, 60 * 1000);
 }
 
 export default function startNetworkDataUpdates() {

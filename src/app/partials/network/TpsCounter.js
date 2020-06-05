@@ -1,10 +1,10 @@
 import React from "react";
-import accounting from "accounting";
-import injectClient from "../../../lib/ClientComponent";
+import { FormattedNumber } from "react-intl";
+import { apiClient } from "lib/Client";
 
 import "./TpsCounter.css";
 
-class TpsCounter extends React.PureComponent {
+export default class TpsCounter extends React.PureComponent {
   state = {
     value: 0.0,
     dir: "up"
@@ -21,7 +21,7 @@ class TpsCounter extends React.PureComponent {
   }
 
   async fetch() {
-    const tps = await this.props.client.networkTps(this.props.period);
+    const tps = await apiClient.networkTps(this.props.period);
     this.setState(
       {
         value: tps,
@@ -50,12 +50,10 @@ class TpsCounter extends React.PureComponent {
     return (
       <h3 className="mb-0">
         <span className={`tps-counter intensity-${this.intensity}`}>
-          {accounting.formatNumber(value, 3)}
+          <FormattedNumber value={value} maximumFractionDigits={3} />
         </span>{" "}
         <small className="text-muted">{this.props.title}</small>
       </h3>
     );
   }
 }
-
-export default injectClient(TpsCounter);
