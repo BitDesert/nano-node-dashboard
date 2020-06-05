@@ -1,6 +1,7 @@
 import React from "react";
 import ReactSVG from "react-svg";
 import LoadingNatricon from "app/images/loading-natricon.svg";
+import Jdenticon from 'react-jdenticon';
 
 import "./Natricon.css";
 
@@ -45,6 +46,6 @@ export default class Natricon extends React.PureComponent {
     const { account, ...otherProps } = this.props;
     if (!this.state.loaded) return this.loadingState();
 
-    return <img alt="natricon" {...otherProps} src={this.imageUrl} />;
+    return(<div {...otherProps}><Jdenticon value={this.props.account} /></div>);
   }
 }
