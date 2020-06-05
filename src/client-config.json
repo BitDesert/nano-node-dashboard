@@ -1,0 +1,39 @@
+{
+  "server": "https://api.nanocrawler.cc",
+  "websocketServer": "ws.nanocrawler.cc",
+  "donationAddress": "nano_1ninja7rh37ehfp9utkor5ixmxyg8kme8fnzc4zty145ibch8kf5jwpnzr3r",
+  "currency": {
+    "name": "Nano",
+    "shortName": "NANO",
+    "precision": 30,
+    "maxSupply": 133248289,
+    "prefixes": ["xrb", "nano"],
+    "qrPrefix": "nano",
+    "supportsMyNanoNinja": true
+  },
+  "features": {
+    "nodeStatus": true,
+    "searchSuggestions": false,
+    "supportedLanguages": {
+      "en": "English",
+      "cs": "Čeština",
+      "da": "Dansk",
+      "de": "Deutsch",
+      "es": "Español",
+      "fr": "Français",
+      "it": "Italiano",
+      "hr": "Hrvatski",
+      "hu": "Magyar",
+      "id": "Bahasa Indonesia",
+      "nl": "Nederlands",
+      "pt-BR": "Português Brasileiro",
+      "el": "Ελληνικά",
+      "ro": "Română",
+      "ru": "Русский",
+      "sv": "Svenska",
+      "zh-CN": "汉语",
+      "zh-TW": "漢語"
+    }
+  },
+  "serviceMonitors": []
+}
